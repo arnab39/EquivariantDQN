@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from models.DQ_learning import DQN_train
-from models.DQ_learning_with_prioritized_replay import DQN_train_prioritized
+#from models.DQ_learning_with_prioritized_replay import DQN_train_prioritized
 from networks.vanilla_network import Vanilla_DQN_Snake,DQN_Cartpole
 from environment import CartpoleEnv,SnakeEnv
 #from plotting import plot_results
@@ -22,6 +22,7 @@ def get_args():
     parser.add_argument('--epsilon_decay', type=int, default=30000)
     parser.add_argument('--lr', type=float, default=.00005)
     parser.add_argument('--total_frames', type=int, default=1200000)
+    parser.add_argument('--priority', type=bool, default=False)
     parser.add_argument('--alpha', type=float, default=0.6)
     parser.add_argument('--beta', type=float, default=0.4)
     args = parser.parse_args()
@@ -44,12 +45,12 @@ if __name__ == '__main__':
     network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
 
     optimizer = optim.Adam(network.parameters(), lr=args.lr)
-    trainer = DQN_train_prioritized(device, network, optimizer, environment, args.gamma,
-               args.batch_size, args.replay_memory_size, args.epsilon_decay,args.alpha, args.beta)
+    #trainer = DQN_train_prioritized(device, network, optimizer, environment, args.gamma,
+    #           args.batch_size, args.replay_memory_size, args.epsilon_decay,args.alpha, args.beta)
 
-    #trainer = DQN_train(device, network, optimizer, environment, args.gamma,
-    #           args.batch_size, args.replay_memory_size, args.epsilon_decay)
-    trainer.train_model(args.total_frames, writer)
+    trainer = DQN_train(device, network, optimizer, environment, args.gamma,
+               args.batch_size, args.replay_memory_size, args.epsilon_decay, args.priority, args.alpha, args.beta)
+    trainer.train_model(args.total_frames, writer, args.priority)
     writer.close()
 
 

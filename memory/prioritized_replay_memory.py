@@ -17,8 +17,9 @@ class prioritized_replay_buffer(object):
 
 	def push(self, state, action, next_state, reward, done):
 		
-		state = np.expand_dims(state.cuda().data.cpu().numpy(), 0)
-		next_state = np.expand_dims(next_state.cuda().data.cpu().numpy(), 0)
+		USE_CUDA = torch.cuda.is_available()
+		state = np.expand_dims(state.cuda().data.cpu().numpy(), 0) if USE_CUDA else np.expand_dims(state.cpu().numpy(), 0)
+		next_state = np.expand_dims(next_state.cuda().data.cpu().numpy(), 0) if USE_CUDA else np.expand_dims(next_state.cpu().numpy(), 0)
 
 		max_prio = self.priorities.max() if self.buffer else 1.0
 

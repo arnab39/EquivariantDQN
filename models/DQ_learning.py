@@ -10,7 +10,7 @@ __all__ = ["DQN_train"]
 
 class DQN_train():
     def __init__(self, device, network, optimizer, environment, gamma,
-              batch_size, replay_memory_size, epsilon_decay):
+              batch_size, replay_memory_size, epsilon_decay, priority=False, alpha=0.6, beta=0.4):
         self.device = device
         self.network = network
         self.network.train()
@@ -19,7 +19,7 @@ class DQN_train():
         self.gamma = gamma
         self.batch_size = batch_size
         self.replay_memory_size = replay_memory_size
-        self.buffer =  replay_buffer(replay_memory_size)
+        self.buffer = prioritized_replay_buffer(replay_memory_size,alpha) if priority else replay_buffer(replay_memory_size)
         self.epsilon_decay = epsilon_decay
         self.transition = collections.namedtuple('transition', ['cur_state', 'action', 'next_state', 'reward', 'mask'])
 
@@ -28,13 +28,28 @@ class DQN_train():
         epsilon_final = 0.01
         return epsilon_final + (epsilon_start - epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
 
-    def update_network(self):
-        cur_states, actions, next_states, rewards, masks = self.buffer.sample(self.batch_size)
-        cur_states = torch.stack(cur_states)
-        next_states = torch.stack(next_states)
-        actions = torch.tensor(actions, dtype=torch.int64).to(self.device)
-        rewards = torch.tensor(rewards, dtype=torch.int8).to(self.device)
-        masks = torch.tensor(masks, dtype=torch.int8).to(self.device)
+    def update_network(self, priority=False):
+
+        if priority:
+            USE_CUDA = torch.cuda.is_available()
+            Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda() if USE_CUDA else autograd.Variable(*args, **kwargs)
+
+            cur_states, actions, next_states, rewards, masks, indices, weights = self.buffer.sample(self.batch_size, self.beta)
+
+            cur_states = Variable(torch.FloatTensor(np.float32(cur_states)))
+            next_states = Variable(torch.FloatTensor(np.float32(next_states)))
+            actions = Variable(torch.LongTensor(actions))
+            rewards = Variable(torch.FloatTensor(rewards))
+            masks = Variable(torch.FloatTensor(masks))
+            weights = Variable(torch.FloatTensor(weights))
+
+        else:
+            cur_states, actions, next_states, rewards, masks = self.buffer.sample(self.batch_size)
+            cur_states = torch.stack(cur_states)
+            next_states = torch.stack(next_states)
+            actions = torch.tensor(actions, dtype=torch.int64).to(self.device)
+            rewards = torch.tensor(rewards, dtype=torch.int8).to(self.device)
+            masks = torch.tensor(masks, dtype=torch.int8).to(self.device)
 
         Q_values = self.network(cur_states)
         next_Q_values = self.network(next_states)
@@ -50,7 +65,7 @@ class DQN_train():
         self.optimizer.step()
         return loss
 
-    def train_model(self,total_frames, writer):
+    def train_model(self,total_frames, writer, priority=False):
         episode_count = 1
         episode_length = 0
         episode_reward = 0
@@ -64,10 +79,14 @@ class DQN_train():
             episode_length = episode_length + 1
             episode_reward = episode_reward + reward
             mask = 0 if done else 1
-            self.buffer.push(self.transition(cur_state, action, next_state, reward, mask))
+
+            if priority:
+                self.buffer.push(cur_state, action, next_state, reward, mask)
+            else:
+                self.buffer.push(self.transition(cur_state, action, next_state, reward, mask))
 
             if len(self.buffer) >= self.batch_size:
-                loss = self.update_network()
+                loss = self.update_network(priority)
                 writer.add_scalar('Loss', loss, frame)
             cur_state = next_state
             if done:
