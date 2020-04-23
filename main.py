@@ -1,9 +1,7 @@
 from argparse import ArgumentParser
 from models.DQ_learning import DQN_train
-#from models.DQ_learning_with_prioritized_replay import DQN_train_prioritized
 from networks.vanilla_network import Vanilla_DQN_Snake,DQN_Cartpole
 from environment import CartpoleEnv,SnakeEnv
-#from plotting import plot_results
 import torch
 import torch.optim as optim
 import random
@@ -20,7 +18,7 @@ def get_args():
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--replay_memory_size', type=int, default=100000)
     parser.add_argument('--epsilon_decay', type=int, default=30000)
-    parser.add_argument('--lr', type=float, default=.00005)
+    parser.add_argument('--lr', type=float, default=.00001)
     parser.add_argument('--total_frames', type=int, default=1200000)
     parser.add_argument('--priority', type=bool, default=False)
     parser.add_argument('--alpha', type=float, default=0.6)

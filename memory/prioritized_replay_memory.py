@@ -1,6 +1,7 @@
 import collections
 import numpy as np
 import random
+import torch
 
 __all__ = ["prioritized_replay_buffer"]
 
