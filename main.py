@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
 from models.DQ_learning import DQN_train
+from models.DQ_learning_with_prioritized_replay import DQN_train_prioritized
 from networks.vanilla_network import Vanilla_DQN_Snake,DQN_Cartpole
 from environment import CartpoleEnv,SnakeEnv
-from plotting import plot_results
+#from plotting import plot_results
 import torch
 import torch.optim as optim
 import random
@@ -21,6 +22,8 @@ def get_args():
     parser.add_argument('--epsilon_decay', type=int, default=30000)
     parser.add_argument('--lr', type=float, default=.00005)
     parser.add_argument('--total_frames', type=int, default=1200000)
+    parser.add_argument('--alpha', type=float, default=0.6)
+    parser.add_argument('--beta', type=float, default=0.4)
     args = parser.parse_args()
     return args
 
@@ -32,6 +35,7 @@ if __name__ == '__main__':
     device = torch.device("cuda" if cuda else "cpu")
     print("You are using ",device," ...")
 
+    # in order to run using catrpole environment, uncomment the following 2 lines and comment the next 3 lines
     #environment = CartpoleEnv(args.gamma,args.seed)
     #network = DQN_Cartpole(environment.num_inputs,environment.num_actions).to(device)
 
@@ -40,8 +44,11 @@ if __name__ == '__main__':
     network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
 
     optimizer = optim.Adam(network.parameters(), lr=args.lr)
-    trainer = DQN_train(device, network, optimizer, environment, args.gamma,
-              args.batch_size, args.replay_memory_size, args.epsilon_decay)
+    trainer = DQN_train_prioritized(device, network, optimizer, environment, args.gamma,
+               args.batch_size, args.replay_memory_size, args.epsilon_decay,args.alpha, args.beta)
+
+    #trainer = DQN_train(device, network, optimizer, environment, args.gamma,
+    #           args.batch_size, args.replay_memory_size, args.epsilon_decay)
     trainer.train_model(args.total_frames, writer)
     writer.close()
 
