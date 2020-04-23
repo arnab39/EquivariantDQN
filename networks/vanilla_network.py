@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.autograd as autograd
 
 import random
 
@@ -13,7 +12,7 @@ class Vanilla_DQN_Snake(nn.Module):
         self.input_shape = input_shape
         self.num_actions = num_actions
         self.features = nn.Sequential( # 3 conv layers
-            nn.Conv2d(3, 32, kernel_size=8, stride=4, padding=2),
+            nn.Conv2d(self.input_shape[0], 32, kernel_size=6, stride=2, padding=2),
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=2),
             nn.ReLU(),
@@ -27,14 +26,14 @@ class Vanilla_DQN_Snake(nn.Module):
         )
 
     def forward(self, x):
-        x = x.view(-1, 3, self.input_shape[0], self.input_shape[1])
+        x = x.view(-1, self.input_shape[0], self.input_shape[1], self.input_shape[2])
         x = self.features(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
 
     def feature_size(self):
-        x = self.features(torch.zeros(1, 3, 32, 32)).view(1, -1).size(1)
+        x = self.features(torch.zeros(1, self.input_shape[0], self.input_shape[1], self.input_shape[2])).view(1, -1).size(1)
         return x
 
     def get_action(self, state, epsilon):
