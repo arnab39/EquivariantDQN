@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import sys
 
 import random
 
@@ -12,11 +13,11 @@ class Vanilla_DQN_Snake(nn.Module):
         self.input_shape = input_shape
         self.num_actions = num_actions
         self.features = nn.Sequential( # 3 conv layers
-            nn.Conv2d(self.input_shape[0], 32, kernel_size=6, stride=2, padding=2),
+            nn.Conv2d(self.input_shape[0], 32, kernel_size=5, stride=2, padding=2),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=2),
+            nn.Conv2d(32, 64, kernel_size=5, stride=2, padding=2),
             nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=2),
+            nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2),
             nn.ReLU()
         )
         self.fc = nn.Sequential( # 2 linear layers

@@ -4,7 +4,7 @@ import random
 __all__ = ["replay_buffer"]
 
 class replay_buffer():
-    def __init__(self, memory_size=100):
+    def __init__(self, memory_size=1000):
         self.buffer = collections.deque()
         self.memory_size = memory_size
 

@@ -1,3 +1,4 @@
 from .vanilla_network import *
+from .equivariant_network import *
 
-__all__ = ["Vanilla_DQN_Snake","DQN_Cartpole"]
+__all__ = ["Vanilla_DQN_Snake","DQN_Cartpole", "C4_steerable_DQN_Snake","D4_steerable_DQN_Snake"]

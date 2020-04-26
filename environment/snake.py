@@ -13,7 +13,7 @@ class SnakeEnv():
 
 		self.game = Snake(height=height,width=width,init_length=4)
 		reward_dict = {"positive": 1.0, "negative": -1.0, "tick": 0.0, "loss": -1.0, "win": 1.0}
-		self.environment = PLE(self.game, fps=fps, reward_values=reward_dict)
+		self.environment = PLE(self.game, fps=fps, reward_values=reward_dict, num_steps=2)
 		self.init_env() # initialize the game
 		self.allowed_actions = self.environment.getActionSet() # the list of allowed actions to be taken by an agent
 		self.num_actions = len(self.allowed_actions) - 1  # number of actions that are allowed in this env
@@ -40,9 +40,9 @@ class SnakeEnv():
 	def reset(self):
 		# resets the game to initial values and refreshes the screen with a new small snake and random food position.
 		self.environment.reset_game()
-		self.frame_hist.reset()
 		_ = self.environment.act(None)
-		return self.get_current_state()
+		self.frame_hist.reset(np.transpose(self.environment.getScreenRGB(),(2,0,1)))
+		return self.frame_hist.get_history()
 
 	def take_action(self, action):
 		# lets the snake take the chosen action of moving in some direction

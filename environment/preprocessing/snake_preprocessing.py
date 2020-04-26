@@ -10,9 +10,9 @@ class frame_history():
         self.width = width
         self.frame_history_size = frame_history_size
 
-    def reset(self):
+    def reset(self,frame):
         self.buffer.clear()
-        self.buffer.extend([np.zeros((3, self.height, self.width)) for i in range(self.frame_history_size)])
+        self.buffer.extend([frame for i in range(self.frame_history_size)])
 
     def push(self, frame):
         self.buffer.popleft()
