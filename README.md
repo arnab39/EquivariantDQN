@@ -3,7 +3,6 @@ This is the official repository of our paper "Steerable CNNs for Deep Q-Learning
 <br/>
 ![Snake Game](assets/snake.gif)
 
-<br/>
 ## Required libraries
 - pytorch>=1.4
 - pygame
