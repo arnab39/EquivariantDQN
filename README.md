@@ -1,12 +1,17 @@
 # EquivariantDQN
-Deep equivariant Q-learning for symmetric games
+This is the official repository of our paper "Steerable CNNs for Deep Q-Learning in symmetric environments". Note that the entire code is written in python 3.7 to make it compatible with e2cnn library.
 
 ## Required libraries
-- python 3.6.9
-- pytorch/torch
+- pytorch>=1.4
 - pygame
 - PIL
 - PLE 
+- e2cnn
+- tqdm
+- tensorboard
+- numpy
+- scipy
+- gym (optional|only for cartpole)
 
 ### To install PLE, follow these steps
 ```
@@ -16,10 +21,29 @@ cd PyGame-Learning-Environment
 
 pip install -e .
 ```
+### To install e2cnn, follow these steps
+```
+git clone https://github.com/QUVA-Lab/e2cnn
+
+cd e2cnn
+
+pip install .
+```
 
 ## How to run
-Run using the following script
-```python main.py```
+Although we give user the choice to play with the model by allowing them to select different arguments we would recommend them to keep most of them to default which are found to be the best hyperparameter.
+1) To run a Vanilla CNN with seed 1 in GPU 0 <br/>
+```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type regular --train True   ```<br/>
+Alternatively, user can go to main.py and change the default arguments. We give a default of 4000 for totat_episodes which user can change as per their requirement by adding ```--total_episodes new_number```. 
+2) To run a D_4 Equivariant CNN with seed 1 in GPU 0 <br/>
+```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type D4_Equivariant --train True   ```<br/>
+3) To run a prioritized replay based Vanilla CNN with seed 1 in GPU 0 <br/>
+```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type regular --priority_replay True --train True   ```<br/>
+4) To run a prioritized replay based D_4 Equivariant CNN with seed 1 in GPU 0 <br/>
+```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type D4_Equivariant --priority_replay True --train True   ```<br/>
+
+## Recreating the results in the paper
+Once user run the code they will have the rewards per episode stored in the events file of tensorboard which then can be downloaded as csv files. To recreate the results we recommend running all the four models with a seed of 1,2 and 3 using the default hyperparameters. Then the csv obtained from them should be put in csv_files folder and can be plotted running the ```plot_files.py```. Infact, we also provide the csv files of all the runs.
 
 
 ## Running code on custom games, networks 
