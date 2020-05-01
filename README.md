@@ -42,6 +42,9 @@ Alternatively, user can go to main.py and change the default arguments. We give 
 4) To run a prioritized replay based D_4 Equivariant CNN with seed 1 in GPU 0 <br/>
 ```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type D4_Equivariant --priority_replay True --train True   ```<br/>
 
+## Recreating the results in the paper
+Once user run the code they will have the rewards per episode stored in the events file of tensorboard which then can be downloaded as csv files. To recreate the results we recommend running all the four models with a seed of 1,2 and 3 using the default hyperparameters. Then the csv obtained from them should be put in csv_files folder and can be plotted running the ```plot_files.py```. Infact, we also provide the csv files of all the runs.
+
 
 ## Running code on custom games, networks 
 
