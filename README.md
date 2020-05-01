@@ -48,12 +48,12 @@ Alternatively, user can go to main.py and change the default arguments. We give 
 <p float="left">
   <img src="https://github.com/arnab39/EquivariantDQN/blob/master/assets/Eq_vs_reg_cnn_normal_replay.png" width="400" />
   <img src="https://github.com/arnab39/EquivariantDQN/blob/master/assets/Eq_vs_reg_cnn_priority_replay.png" width="400" />
-</p>
+
 Once user run the code they will have the rewards per episode stored in the events file of tensorboard which then can be downloaded as csv files. To recreate the results we recommend running all the four models with a seed of 1,2 and 3 using the default hyperparameters. Then the csv obtained from them should be put in csv_files folder and can be plotted running the plot_files.py file. Infact, we also provide the csv files of all the runs.<br/>
 To recreate the results in the table take average reward over last 500 episodes for each of the model from the csv files obtained. We also provide the final checkpoint of our four primary models which is obtained after training for 4000 episodes. User can run the following to evaluate the model.<br/>
 ```python main.py --seed checkpointseed --total_episodes num_episodestest --checkpoint_dir './checkpoints/dir_name' --network_type network_chosen ```<br/>
 It can be tested for any number of episodes and returns the average reward obtained from all those. 
-
+</p>
 
 
 ## Running code on custom games, networks 
