@@ -33,7 +33,7 @@ pip install .
 ```
 
 ## How to run
-Although we give user the choice to play with the model by allowing them to select different arguments we would recommend them to keep most of them to default which are found to be the best hyperparameter.
+Although we give user the choice to play with the model by allowing them to select different arguments we would recommend them to keep most of them to default which are found to be the best hyperparameter. Also user should note that in our implementation we decay `epsilon` to 0.01 from 1 and the decay rate can be controlled by hyperparameter `epsilon_decay`.
 1) To run a Vanilla CNN with seed 1 in GPU 0 <br/>
 ```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type regular  ```<br/>
 Alternatively, user can go to main.py and change the default arguments. We give a default of 4000 for totat_episodes which user can change as per their requirement by adding ```--total_episodes new_number```. 
@@ -56,11 +56,11 @@ It can be tested for any number of episodes and returns the average reward obtai
 </p>
 
 
-## Running code on custom games, networks 
+## Running code on custom games and networks 
 
-- The current settings of the code works for the Snake game offered by PLE. Should you wish to use another game offered by PLE, simply change the `snake_env.py` code to replace the `SnakeEnv` class with the class for your preffered game. 
-- Currently a simply CNN (with 3 layers) is used for learning the game features. In order to use your own network, change `network.py`. This code also implements the DQN algorithm. Any other algorithm can also be used by modifying it. 
-- An arbitrary loss function may be used by modifying the `calculate_td_loss` function in `loss.py`.
-- All initialization values like `buffer size`, `batch size`, `gamma`, 	`epsilon`, `number of steps`, etc can be changed and experimented with in `main.py`.  
+- The code has been written in a modular way. The current settings of the code works for the Snake game (we also provide code for Cartpole for debugging the learning algorithm) offered by PLE. If user wishes to use another game, he/she has to add `othergame_env.py` and implement the game class according the member functions of Snake class. 
+- Currently Vanilla and Equivariant networks have been implemented in the network folder. In order to use another network, the user needs to add `othernetwork.py`and implement the network class according to the member functions of either of Vanilla or Equivariant network.
+- We recommend to keep the buffer implementations and DQ learning class same and while letting users to play with the hyperparameters for them.
+- All initialization values like `buffer size`, `batch size`, `gamma`, 	`epsilon_decay`, `total_episodes`, etc can be found and changed in `main.py` or from terminal by using arguments.  
 
 
