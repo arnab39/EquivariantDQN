@@ -1,3 +1,3 @@
-from .DQ_learning import DQN_train
+from .DQ_learning import DQN
 
-__all__ = ["DQN_train"]
+__all__ = ["DQN"]

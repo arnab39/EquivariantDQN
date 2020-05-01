@@ -1,20 +1,19 @@
 import math
 import torch
 import collections
-import sys
 from memory.replay_memory import replay_buffer
 from memory.prioritized_replay_memory import prioritized_replay_buffer
 from tqdm import tqdm
 import os
-import numpy as np
 
-__all__ = ["DQN_train"]
+__all__ = ["DQN"]
 
-class DQN_train():
-    def __init__(self, device, network, optimizer, environment, gamma,
-              batch_size, replay_memory_size, epsilon_decay, checkpoint_dir, priority_replay=False, alpha=0.6, beta=0.4):
+class DQN():
+    def __init__(self, device, network, target_network, optimizer, environment, gamma, batch_size, replay_memory_size, epsilon_decay,
+                            checkpoint_dir, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 10000):
         self.device = device
         self.network = network
+        self.target_network = target_network
         self.optimizer = optimizer
         self.environment = environment
         self.gamma = gamma
@@ -27,38 +26,45 @@ class DQN_train():
             os.makedirs(checkpoint_dir)
         self.checkpoint_path = checkpoint_dir + '/saved_model'
         self.priority_replay = priority_replay
-        self.alpha = alpha
-        self.beta = beta
+        self.beta_start = beta_start
+        self.beta_frames = beta_frames
+        self.replay_initial = replay_initial
+        self.beta = beta_start
 
     def epsilon_by_frame(self, frame_idx):
         epsilon_start = 1.0
         epsilon_final = 0.01
         return epsilon_final + (epsilon_start - epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
 
+    def beta_by_frame(self, frame_idx):
+        return min(1.0, self.beta_start + frame_idx * (1.0 - self.beta_start) / self.beta_frames)
+
+    def update_target(self):
+        self.network.eval()
+        self.target_network.load_state_dict(self.network.state_dict())
+        self.network.train()
+
     def update_network(self):
         if self.priority_replay:
-            cur_states, actions, next_states, rewards, masks, indices, weights = self.buffer.sample(self.batch_size,
-                                                                                                    self.beta)
-
-            cur_states = torch.tensor(cur_states, dtype=torch.float32).to(self.device)
-            next_states = torch.tensor(next_states, dtype=torch.float32).to(self.device)
+            cur_states, actions, next_states, rewards, masks, indices, weights = self.buffer.sample(self.batch_size, self.beta)
             weights = torch.tensor(weights, dtype=torch.float32).to(self.device)
 
         else:
             cur_states, actions, next_states, rewards, masks = self.buffer.sample(self.batch_size)
-            cur_states = torch.stack(cur_states)
-            next_states = torch.stack(next_states)
+        cur_states = torch.stack(cur_states)
+        next_states = torch.stack(next_states)
         actions = torch.tensor(actions, dtype=torch.int64).to(self.device)
         rewards = torch.tensor(rewards, dtype=torch.int8).to(self.device)
         masks = torch.tensor(masks, dtype=torch.int8).to(self.device)
 
         Q_values = self.network(cur_states)
-        next_Q_values = self.network(next_states)
+        next_Q_values = self.target_network(next_states)
 
         Q_values = torch.gather(Q_values, 1, actions.unsqueeze(1)).squeeze(1)
         next_Q_values = next_Q_values.max(1)[0]
 
         delta = rewards + self.gamma * next_Q_values.detach() * masks - Q_values
+
         if self.priority_replay:
             loss = delta.pow(2) * weights
             prios = loss + 1e-5
@@ -66,35 +72,32 @@ class DQN_train():
             self.buffer.update_priorities(indices, prios.data.cpu().numpy())
         else:
             loss = delta.pow(2).mean()
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss
 
-    def train_model(self,total_frames, writer):
+    def train_model(self,total_episodes, writer):
         episode_count = 1
         episode_length = 0
         episode_reward = 0
+        self.network.train()
         cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)
-        for frame in tqdm(range(total_frames),desc="Training"):
+        for frame in tqdm(range(3000000),desc="Training"):
             epsilon = self.epsilon_by_frame(frame)
-
-            self.network.eval()
             action = self.network.get_action(cur_state, epsilon)
-            self.network.train()
-
             next_state, reward, done, _ = self.environment.take_action(action)
             next_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
-
             episode_length = episode_length + 1
             episode_reward = episode_reward + reward
             mask = 0 if done else 1
-            if self.priority_replay:
-                self.buffer.push(cur_state, action, next_state, reward, mask)
-            else:
-                self.buffer.push(self.transition(cur_state, action, next_state, reward, mask))
-
-            if len(self.buffer) >= self.batch_size:
+            self.buffer.push(self.transition(cur_state, action, next_state, reward, mask))
+            if self.priority_replay == True and len(self.buffer) >= self.replay_initial:
+                self.beta = self.beta_by_frame(frame)
+                loss = self.update_network()
+                writer.add_scalar('Loss', loss, frame)
+            if self.priority_replay == False and len(self.buffer) >= self.batch_size:
                 loss = self.update_network()
                 writer.add_scalar('Loss', loss, frame)
             cur_state = next_state
@@ -105,12 +108,34 @@ class DQN_train():
                 episode_reward = 0
                 episode_count = episode_count + 1
                 cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)
-            if frame > 800000 and frame % 200000 == 199999:
-                print("Saving model ...")
+            if frame % 1000 == 0:
+                self.update_target()
+            if episode_count > 2000 and episode_count % 250 == 249:
+                self.network.eval()
                 torch.save({
                     'model_state_dict': self.network.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict()
                 }, self.checkpoint_path)
+                self.network.train()
+            if episode_count == total_episodes:
+                break
 
-
-
+    def eval_model(self,total_episodes):
+        episode_count = 1
+        cumulative_reward = 0
+        checkpoint = torch.load(self.checkpoint_path)
+        self.network.load_state_dict(checkpoint['model_state_dict'])
+        self.network.eval()
+        cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)
+        for frame in tqdm(range(1000000), desc="Evaluating"):
+            action = self.network.get_action(cur_state, 0.01)
+            next_state, reward, done, _ = self.environment.take_action(action)
+            next_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
+            cumulative_reward = cumulative_reward + reward
+            cur_state = next_state
+            if done:
+                episode_count = episode_count + 1
+                cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)
+            if episode_count == total_episodes:
+                break
+        return cumulative_reward/total_episodes
