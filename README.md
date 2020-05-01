@@ -1,12 +1,12 @@
 # EquivariantDQN
-Deep equivariant Q-learning for symmetric games
+This is the official repository of our paper "Steerable CNNs for Deep Q-Learning in symmetric environments". Note that the entire code is written in python 3.7 to make it compatible with e2cnn library.
 
 ## Required libraries
-- python 3.6.9
-- pytorch/torch
+- pytorch>=1.4
 - pygame
 - PIL
 - PLE 
+- e2cnn
 
 ### To install PLE, follow these steps
 ```
@@ -15,6 +15,14 @@ git clone https://github.com/ntasfi/PyGame-Learning-Environment.git
 cd PyGame-Learning-Environment
 
 pip install -e .
+```
+### To install e2cnn, follow these steps
+```
+git clone https://github.com/QUVA-Lab/e2cnn
+
+cd e2cnn
+
+pip install .
 ```
 
 ## How to run
