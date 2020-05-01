@@ -1,6 +1,9 @@
 # EquivariantDQN
 This is the official repository of our paper "Steerable CNNs for Deep Q-Learning in symmetric environments". Note that the entire code is written in python 3.7 to make it compatible with e2cnn library. We use the Snake environment throughout the project. 
-![Snake Game](assets/snake.gif)
+<p align="center">
+  ![Snake Game](assets/snake.gif)
+</p>
+
 
 ## Required libraries
 - pytorch>=1.4
