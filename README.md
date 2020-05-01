@@ -63,4 +63,10 @@ It can be tested for any number of episodes and returns the average reward obtai
 - We recommend to keep the buffer implementations and DQ learning class same and while letting users to play with the hyperparameters for them.
 - All initialization values like `buffer size`, `batch size`, `gamma`, 	`epsilon_decay`, `total_episodes`, etc can be found and changed in `main.py` or from terminal by using arguments.  
 
+## Computational Resources
+We trained the model in Titan Xp and all the models take 5-6 hours to run for 4000 episodes. 
+
+## Contacts
+For more details regarding the code drop an email at: arnabm@cim.mcgill.ca
+
 
