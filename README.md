@@ -33,7 +33,7 @@ pip install .
 ```
 
 ## How to run
-Although we give user the choice to play with the model by allowing them to select different arguments we would recommend them to keep most of them to default which are found to be the best hyperparameter. Also user should note that in our implementation we decay `epsilon` to 0.01 from 1 and the decay rate can be controlled by hyperparameter `epsilon_decay`.
+Although we give user the choice to play with the model by allowing them to select different arguments we would recommend them to keep most of them to default which are found by manually tuning hyperparamters. Also user should note that in our implementation we decay `epsilon` to 0.01 from 1 and the decay rate can be controlled by hyperparameter `epsilon_decay`.
 1) To run a Vanilla CNN with seed 1 in GPU 0 <br/>
 ```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type regular  ```<br/>
 Alternatively, user can go to main.py and change the default arguments. We give a default of 4000 for totat_episodes which user can change as per their requirement by adding ```--total_episodes new_number```. 
