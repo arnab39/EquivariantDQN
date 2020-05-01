@@ -42,8 +42,8 @@ Alternatively, user can go to main.py and change the default arguments. We give 
 3) To run a prioritized replay based Vanilla CNN with seed 1 in GPU 0 <br/>
 ```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type regular --priority_replay True ```<br/>
 4) To run a prioritized replay based D_4 Equivariant CNN with seed 1 in GPU 0 <br/>
-```python main.py --seed 1 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type D4_Equivariant --priority_replay True ```<br/>
-
+```python main.py --seed 1 --lr 0.0001 --summary_dir 'runs/dir_name' --checkpoint_dir './checkpoints/dir_name' --gpu_id 0 --network_type D4_Equivariant --priority_replay True ```<br/>
+User should note the higher learning rate used for this model. We discuss in our paper why it is required. 
 ## Reproducing the results in the paper
 <p float="left">
   <img src="https://github.com/arnab39/EquivariantDQN/blob/master/assets/Eq_vs_reg_cnn_normal_replay.png" width="400" />
