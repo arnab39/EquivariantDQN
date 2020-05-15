@@ -1,36 +1,56 @@
 import torch
 import torch.nn as nn
+import e2cnn
 
 import random
 
 __all__ = ["Vanilla_DQN_Snake","DQN_Cartpole"]
 
 class Vanilla_DQN_Snake(nn.Module):
-    def __init__(self, input_shape, num_actions):
+    def __init__(self, input_shape, num_actions, dueling_DQN):
         super(Vanilla_DQN_Snake, self).__init__()
 
         self.input_shape = input_shape
         self.num_actions = num_actions
+        self.dueling_DQN = dueling_DQN
         self.features = nn.Sequential( # 3 conv layers
-            nn.Conv2d(self.input_shape[0], 64, kernel_size=7, stride=2, padding=2),
+            nn.Conv2d(self.input_shape[0], 32, kernel_size=7, stride=2, padding=2),
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),
+            nn.Conv2d(32, 64, kernel_size=5, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(128, 128, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=1),
             nn.ReLU()
         )
-        self.fc = nn.Sequential( # 2 linear layers
-            nn.Linear(self.feature_size(), 128),
-            nn.ReLU(),
-            nn.Linear(128, self.num_actions)
-        )
+        if self.dueling_DQN:
+            print("You are using Dueling DQN")
+            self.advantage = nn.Sequential(  # 2 linear layers
+                nn.Linear(self.feature_size(), 128),
+                nn.ReLU(),
+                nn.Linear(128, self.num_actions)
+            )
+            self.value = nn.Sequential(  # 2 linear layers
+                nn.Linear(self.feature_size(), 128),
+                nn.ReLU(),
+                nn.Linear(128, 1)
+            )
+        else:
+            self.actionvalue = nn.Sequential(  # 2 linear layers
+                nn.Linear(self.feature_size(), 128),
+                nn.ReLU(),
+                nn.Linear(128, self.num_actions)
+            )
 
     def forward(self, x):
         x = x.view(-1, self.input_shape[0], self.input_shape[1], self.input_shape[2])
         x = self.features(x)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
-        return x
+        if self.dueling_DQN:
+            advantage = self.advantage(x)
+            value = self.value(x)
+            return value + advantage - advantage.mean()
+        else:
+            actionvalue = self.actionvalue(x)
+            return actionvalue
 
     def feature_size(self):
         x = self.features(torch.zeros(1, self.input_shape[0], self.input_shape[1], self.input_shape[2])).view(1, -1).size(1)
@@ -46,6 +66,9 @@ class Vanilla_DQN_Snake(nn.Module):
             # choose random (exploration)
             action = random.randrange(self.num_actions)
         return action
+
+
+
 
 class DQN_Cartpole(torch.nn.Module):
     def __init__(self, num_inputs, num_actions):

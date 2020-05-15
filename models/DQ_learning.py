@@ -10,7 +10,7 @@ __all__ = ["DQN"]
 
 class DQN():
     def __init__(self, device, network, target_network, optimizer, environment, gamma, batch_size, replay_memory_size, epsilon_decay,
-                            checkpoint_dir, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 10000):
+                            checkpoint_dir, Double_DQN, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 10000):
         self.device = device
         self.network = network
         self.target_network = target_network
@@ -25,6 +25,9 @@ class DQN():
         if not os.path.isdir(checkpoint_dir):
             os.makedirs(checkpoint_dir)
         self.checkpoint_path = checkpoint_dir + '/saved_model'
+        self.Double_DQN = Double_DQN
+        if self.Double_DQN:
+            print("You are using Double DQN")
         self.priority_replay = priority_replay
         self.beta_start = beta_start
         self.beta_frames = beta_frames
@@ -61,14 +64,18 @@ class DQN():
         next_Q_values = self.target_network(next_states)
 
         Q_values = torch.gather(Q_values, 1, actions.unsqueeze(1)).squeeze(1)
-        next_Q_values = next_Q_values.max(1)[0]
+        if self.Double_DQN:
+            next_Q_values_select = self.network(next_states)
+            next_Q_values = next_Q_values.gather(1, torch.max(next_Q_values_select, 1)[1].unsqueeze(1)).squeeze(1)
+        else:
+            next_Q_values = next_Q_values.max(1)[0]
 
         delta = rewards + self.gamma * next_Q_values.detach() * masks - Q_values
 
         if self.priority_replay:
             loss = delta.pow(2) * weights
-            prios = loss + 1e-5
             loss = loss.mean()
+            prios = torch.abs(delta) + 1e-5
             self.buffer.update_priorities(indices, prios.data.cpu().numpy())
         else:
             loss = delta.pow(2).mean()

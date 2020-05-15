@@ -24,14 +24,17 @@ def get_args():
     parser.add_argument('--epsilon_decay', type=int, default=40000)
     parser.add_argument('--lr', type=float, default=.00001)
     parser.add_argument('--total_episodes', type=int, default=4000)
-    parser.add_argument('--summary_dir', type=str, default='runs/c4equivariantnormalreplay_thin')
-    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/c4equivariantnormalreplay_thin')
+    parser.add_argument('--summary_dir', type=str, default='runs/regularcnnpriorityreplaydouble_seed1')
+    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/regularcnnpriorityreplaydouble_seed1')
     parser.add_argument('--gpu_id', type=str, default='0')
-    # Available network types: 1) regular 2) C4_equivariant 3) D4_equivariant 4) D4_equivariant_mixedfields
-    parser.add_argument('--network_type', type=str, default='D4_equivariant')
+    # Available network types: 1) regular 2) C4_equivariant 3) D4_equivariant
+    parser.add_argument('--network_type', type=str, default='regular')
+    # Available DQN types: 1) regular 2)Dueling
+    parser.add_argument('--dueling_DQN', type=bool, default=False)
+    # Select if you want to use Double_DQN
+    parser.add_argument('--Double_DQN', type=bool, default=True)
     # Select if you want to use priority replay
-    parser.add_argument('--priority_replay', type=bool, default=False)
-    parser.add_argument('--use_mixedfields', type=bool, default=False)
+    parser.add_argument('--priority_replay', type=bool, default=True)
     parser.add_argument('--train', type=bool, default=True)
     args = parser.parse_args()
     return args
@@ -49,16 +52,17 @@ if __name__ == '__main__':
     environment = SnakeEnv(height= 31, width= 31)
     if args.network_type == 'regular':
         print("You are using Regular CNN...")
-        network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
-        target_network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
+        network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+        target_network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
     elif args.network_type == 'C4_equivariant':
         print("You are using C4 Equivariant CNN...")
-        network = C4_steerable_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
-        target_network = C4_steerable_DQN_Snake(environment.input_shape, environment.num_actions).to(device)
+        network = C4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+        target_network = C4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
     else:
         print("You are using D4 Equivariant CNN...")
-        network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.use_mixedfields).to(device)
-        target_network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.use_mixedfields).to(device)
+        network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+        target_network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+
     if args.priority_replay:
         print("You are using priority replay")
     else:
@@ -68,7 +72,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam(network.parameters(), lr=args.lr)
 
     dqn = DQN(device, network, target_network, optimizer, environment, args.gamma,
-              args.batch_size, args.replay_memory_size, args.epsilon_decay, args.checkpoint_dir,args.priority_replay)
+              args.batch_size, args.replay_memory_size, args.epsilon_decay, args.checkpoint_dir, args.Double_DQN, args.priority_replay)
 
     if args.train:
         print("You are Training ..")
