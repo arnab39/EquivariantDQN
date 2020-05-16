@@ -1,6 +1,6 @@
 import torch
-from e2cnn import gspaces
-from e2cnn import nn
+#from e2cnn import gspaces
+#from e2cnn import nn
 import random
 
 __all__ = ["C4_steerable_DQN_Snake","D4_steerable_DQN_Snake"]
