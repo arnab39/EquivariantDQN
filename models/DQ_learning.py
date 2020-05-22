@@ -95,7 +95,6 @@ class DQN():
             epsilon = self.epsilon_by_frame(frame)
             action = self.network.get_action(cur_state, epsilon)
             next_state, reward, done, _ = self.environment.take_action(action)
-            print("reward="+str(reward))
             next_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
             episode_length = episode_length + 1
             episode_reward = episode_reward + reward
