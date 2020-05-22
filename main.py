@@ -3,7 +3,6 @@ from models.DQ_learning import DQN
 from networks.vanilla_network import Vanilla_DQN_Snake
 from networks.equivariant_network import D4_steerable_DQN_Snake,C4_steerable_DQN_Snake
 from environment import SnakeEnv
-from environment.pacman import PacmanEnv
 import torch
 import torch.optim as optim
 import random
@@ -50,8 +49,7 @@ if __name__ == '__main__':
     print("You are using ",device," ...")
 
     os.environ["SDL_VIDEODRIVER"] = "dummy"
-    #environment = SnakeEnv(height= 31, width= 31)
-    environment = PacmanEnv()
+    environment = SnakeEnv(height= 31, width= 31)
     if args.network_type == 'regular':
         print("You are using Regular CNN...")
         network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-#import e2cnn
+import e2cnn
 
 import random
 
