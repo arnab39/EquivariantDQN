@@ -1,6 +1,7 @@
 import math
 import torch
 import collections
+import numpy as np
 from memory.replay_memory import replay_buffer
 from memory.prioritized_replay_memory import prioritized_replay_buffer
 from tqdm import tqdm
@@ -10,7 +11,7 @@ __all__ = ["DQN"]
 
 class DQN():
     def __init__(self, device, network, target_network, optimizer, environment, gamma, batch_size, replay_memory_size, epsilon_decay,
-                            checkpoint_dir, Double_DQN, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 10000):
+                            checkpoint_dir, Double_DQN, epsilon_end, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 1000):
         self.device = device
         self.network = network
         self.target_network = target_network
@@ -28,6 +29,7 @@ class DQN():
         self.Double_DQN = Double_DQN
         if self.Double_DQN:
             print("You are using Double DQN")
+        self.epsilon_final = epsilon_end
         self.priority_replay = priority_replay
         self.beta_start = beta_start
         self.beta_frames = beta_frames
@@ -36,8 +38,7 @@ class DQN():
 
     def epsilon_by_frame(self, frame_idx):
         epsilon_start = 1.0
-        epsilon_final = 0.01
-        return epsilon_final + (epsilon_start - epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
+        return self.epsilon_final + (epsilon_start - self.epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
 
     def beta_by_frame(self, frame_idx):
         return min(1.0, self.beta_start + frame_idx * (1.0 - self.beta_start) / self.beta_frames)
@@ -54,8 +55,8 @@ class DQN():
 
         else:
             cur_states, actions, next_states, rewards, masks = self.buffer.sample(self.batch_size)
-        cur_states = torch.stack(cur_states)
-        next_states = torch.stack(next_states)
+        cur_states = torch.stack(cur_states).type(dtype=torch.float32).to(self.device)
+        next_states = torch.stack(next_states).type(dtype=torch.float32).to(self.device)
         actions = torch.tensor(actions, dtype=torch.int64).to(self.device)
         rewards = torch.tensor(rewards, dtype=torch.int8).to(self.device)
         masks = torch.tensor(masks, dtype=torch.int8).to(self.device)
@@ -85,7 +86,7 @@ class DQN():
         self.optimizer.step()
         return loss
 
-    def train_model(self,total_episodes, writer):
+    def train_model(self,total_episodes, frame_update, writer):
         episode_count = 1
         episode_length = 0
         episode_reward = 0
@@ -95,7 +96,8 @@ class DQN():
             epsilon = self.epsilon_by_frame(frame)
             action = self.network.get_action(cur_state, epsilon)
             next_state, reward, done, _ = self.environment.take_action(action)
-            next_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
+            cur_state = cur_state.type(dtype=torch.uint8).to(self.device)
+            next_state = torch.tensor(next_state, dtype=torch.uint8).to(self.device)
             episode_length = episode_length + 1
             episode_reward = episode_reward + reward
             mask = 0 if done else 1
@@ -115,7 +117,7 @@ class DQN():
                 episode_reward = 0
                 episode_count = episode_count + 1
                 cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)
-            if frame % 1000 == 0:
+            if frame % frame_update == 0:
                 self.update_target()
             if episode_count > 2000 and episode_count % 250 == 249:
                 self.network.eval()
@@ -137,9 +139,8 @@ class DQN():
         for frame in tqdm(range(1000000), desc="Evaluating"):
             action = self.network.get_action(cur_state, 0.01)
             next_state, reward, done, _ = self.environment.take_action(action)
-            next_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
             cumulative_reward = cumulative_reward + reward
-            cur_state = next_state
+            cur_state = torch.tensor(next_state, dtype=torch.float32).to(self.device)
             if done:
                 episode_count = episode_count + 1
                 cur_state = torch.tensor(self.environment.reset(), dtype=torch.float32).to(self.device)

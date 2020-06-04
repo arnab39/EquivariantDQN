@@ -4,8 +4,8 @@ import numpy as np
 __all__ = ["frame_history"]
 
 class frame_history():
-    def __init__(self, height=32, width =32, frame_history_size=4):
-        self.buffer = collections.deque([np.zeros((3, height, width)) for i in range(frame_history_size)])
+    def __init__(self, height=32, width =32, frame_history_size=4, num_channels=3):
+        self.buffer = collections.deque([np.zeros((num_channels, height, width)) for i in range(frame_history_size)])
         self.height = height
         self.width = width
         self.frame_history_size = frame_history_size

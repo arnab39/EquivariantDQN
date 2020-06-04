@@ -17,7 +17,7 @@ class SnakeEnv():
 		self.init_env() # initialize the game
 		self.allowed_actions = self.environment.getActionSet() # the list of allowed actions to be taken by an agent
 		self.num_actions = len(self.allowed_actions) - 1  # number of actions that are allowed in this env
-		self.frame_hist = frame_history(height=height,width=width,frame_history_size=frame_history_size);
+		self.frame_hist = frame_history(height=height,width=width,frame_history_size=frame_history_size,num_channels=3);
 		self.input_shape = self.frame_hist.get_history().shape  # shape of the game input screen
 
 	def init_env(self):
@@ -29,6 +29,7 @@ class SnakeEnv():
 		# get the current state in the game. Returns the current screen of the game with snake and food positions with
 		# a sequence of past .
 		cur_frame = np.transpose(self.environment.getScreenRGB(),(2,0,1))
+		#cur_frame = np.transpose(np.expand_dims(self.environment.getScreenGrayscale(),axis=0), (2, 0, 1))
 		self.frame_hist.push(cur_frame)
 		return self.frame_hist.get_history()
 
@@ -42,6 +43,7 @@ class SnakeEnv():
 		self.environment.reset_game()
 		_ = self.environment.act(None)
 		self.frame_hist.reset(np.transpose(self.environment.getScreenRGB(),(2,0,1)))
+		#self.frame_hist.reset(np.transpose(np.expand_dims(self.environment.getScreenGrayscale(),axis=0), (2, 0, 1)))
 		return self.frame_hist.get_history()
 
 	def take_action(self, action):
