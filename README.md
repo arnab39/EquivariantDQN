@@ -66,7 +66,5 @@ It can be tested for any number of episodes and returns the average reward obtai
 ## Computational Resources
 We trained the model in Titan Xp and all the models take 5-6 hours to run for 4000 episodes. 
 
-## Contacts
-For more details regarding the code drop an email at: arnabm@cim.mcgill.ca
 
 
