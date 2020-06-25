@@ -1,7 +1,6 @@
 import math
 import torch
 import collections
-import numpy as np
 from memory.replay_memory import replay_buffer
 from memory.prioritized_replay_memory import prioritized_replay_buffer
 from tqdm import tqdm
@@ -9,9 +8,11 @@ import os
 
 __all__ = ["DQN"]
 
+# The DQN class which implements all its subsequent improvements like Double DQN and prioritized replay DQN
 class DQN():
-    def __init__(self, device, network, target_network, optimizer, environment, gamma, batch_size, replay_memory_size, epsilon_decay,
-                            checkpoint_dir, Double_DQN, epsilon_end, priority_replay=False, alpha=0.6, beta_start=0.4, beta_frames = 100000, replay_initial = 1000):
+    def __init__(self, device, network, target_network, optimizer, environment, gamma, batch_size, replay_memory_size,
+                 epsilon_decay, checkpoint_dir, Double_DQN, epsilon_end, priority_replay=False, alpha=0.6, beta_start=0.4,
+                 beta_frames = 100000, replay_initial = 1000):
         self.device = device
         self.network = network
         self.target_network = target_network
@@ -120,12 +121,14 @@ class DQN():
             if frame % frame_update == 0:
                 self.update_target()
             if episode_count > 2000 and episode_count % 250 == 249:
+                '''
                 self.network.eval()
                 torch.save({
                     'model_state_dict': self.network.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict()
                 }, self.checkpoint_path)
                 self.network.train()
+                '''
             if episode_count == total_episodes:
                 break
 

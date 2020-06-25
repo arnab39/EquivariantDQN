@@ -1,7 +1,6 @@
 import collections
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 
 __all__ = ["frame_history"]
 
@@ -15,14 +14,14 @@ class frame_history():
     def reset(self, frame):
         self.buffer.clear()
         img = Image.fromarray(frame)
-        img = img.resize((self.height, self.width)).convert('L')
+        img = img.resize((self.height, self.width)).convert('L')#.rotate(90)
         processed_frame = np.array(img)
         self.buffer.extend([processed_frame.astype('uint8') for i in range(self.frame_history_size)])
 
     def push(self, frame):
         self.buffer.popleft()
         img = Image.fromarray(frame)
-        img = img.resize((self.height, self.width)).convert('L')
+        img = img.resize((self.height, self.width)).convert('L')#.rotate(90)
         processed_frame = np.array(img)
         self.buffer.append(processed_frame.astype('uint8'))
 

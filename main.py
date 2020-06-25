@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from models.DQ_learning import DQN
 from networks.vanilla_network import Vanilla_DQN_Snake
 from networks.vanilla_network import Vanilla_DQN_Pacman
-from networks.equivariant_network import D4_steerable_DQN_Snake, D4_steerable_DQN_Snake_new, steerable_DQN_Pacman
+from networks.equivariant_network import D4_steerable_DQN_Snake, steerable_DQN_Pacman
 from environment import SnakeEnv
 from environment import PacmanEnv
 import torch
@@ -22,18 +22,20 @@ def get_args():
     parser.add_argument('--seed', type=float, default=1)
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--replay_memory_size', type=int, default=250000)
+    parser.add_argument('--replay_memory_size', type=int, default=100000)
     parser.add_argument('--epsilon_decay', type=int, default=40000)
     parser.add_argument('--epsilon_end', type=float, default=0.01)
-    parser.add_argument('--frame_update_freq', type=int, default=10000)
+    parser.add_argument('--frame_update_freq', type=int, default=1000)
     parser.add_argument('--lr', type=float, default=.00001)
     parser.add_argument('--total_episodes', type=int, default=3000)
-    parser.add_argument('--summary_dir', type=str, default='runs/pacman_equivariant_d4')
-    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints/pacman_equivariant_d4')
+    parser.add_argument('--summary_dir', type=str, default='runs/snake_equivariant_seed1')
+    parser.add_argument('--checkpoint_dir', type=str, default='checkpoints/snake_equivariant_seed1')
+    # Available environments: 1) Snake 2) Pacman
+    parser.add_argument('--env', type=str, default='Snake')
     parser.add_argument('--gpu_id', type=str, default='1')
     # Available network types: 1) regular 2) equivariant
     parser.add_argument('--network_type', type=str, default='equivariant')
-    parser.add_argument('--modified', type=bool, default=True)
+    # Restriction level for the equivariant Pacman Architecture
     parser.add_argument('--restriction_level', type=int, default=0)
     # Available DQN types: 1) regular 2)Dueling
     parser.add_argument('--dueling_DQN', type=bool, default=False)
@@ -55,25 +57,32 @@ if __name__ == '__main__':
     print("You are using ",device," ...")
 
     os.environ["SDL_VIDEODRIVER"] = "dummy"
-    #environment = SnakeEnv(height= 31, width= 31)
-    environment = PacmanEnv()
-    print(environment.allowed_actions)
-    print(environment.num_actions)
+    if args.env=='Snake':
+        environment = SnakeEnv(height= 31, width= 31)
+    elif args.env=='Pacman':
+        environment = PacmanEnv()
+    else:
+        sys.exit()
+
     if args.network_type == 'regular':
         print("You are using Regular CNN...")
-        #network = Vanilla_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
-        #target_network = Vanilla_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
-        network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
-        target_network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+        if args.env == 'Pacman':
+            network = Vanilla_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+            target_network = Vanilla_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+        if args.env == 'Snake':
+            network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+            target_network = Vanilla_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
     else:
         print("You are using Equivariant CNN...")
-        network = steerable_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN, args.restriction_level, args.modified)
-        target_network = steerable_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN, args.restriction_level,  args.modified).to(device)
-        network = network.to(device)
-        #network = D4_steerable_DQN_Snake_new(environment.input_shape, environment.num_actions, args.dueling_DQN)
-        #target_network = D4_steerable_DQN_Snake_new(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
-        #network = network.to(device)
-    #sys.exit()
+        if args.env == 'Pacman':
+            network = steerable_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN, args.restriction_level)
+            target_network = steerable_DQN_Pacman(environment.input_shape, environment.num_actions, args.dueling_DQN, args.restriction_level).to(device)
+            network = network.to(device)
+        if args.env == 'Snake':
+            network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN)
+            target_network = D4_steerable_DQN_Snake(environment.input_shape, environment.num_actions, args.dueling_DQN).to(device)
+            network = network.to(device)
+
     if args.priority_replay:
         print("You are using priority replay")
     else:

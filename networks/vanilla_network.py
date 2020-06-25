@@ -5,6 +5,7 @@ import random
 
 __all__ = ["Vanilla_DQN_Snake","DQN_Cartpole", "Vanilla_DQN_Pacman"]
 
+# Vanilla network for Pacman with Dueling Architecture included
 class Vanilla_DQN_Pacman(nn.Module):
     def __init__(self, input_shape, num_actions, dueling_DQN):
         super(Vanilla_DQN_Pacman, self).__init__()
@@ -13,13 +14,10 @@ class Vanilla_DQN_Pacman(nn.Module):
         self.num_actions = num_actions
         self.dueling_DQN = dueling_DQN
         self.features = nn.Sequential( # 3 conv layers
-            #nn.Conv2d(self.input_shape[0], 32, kernel_size=8, stride=4, padding=2),
             nn.Conv2d(self.input_shape[0], 32, kernel_size=7, stride=4, padding=2),
             nn.ReLU(),
-            #nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),
             nn.Conv2d(32, 64, kernel_size=5, stride=2, padding=2),
             nn.ReLU(),
-            #nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
             nn.Conv2d(64, 64, kernel_size=5, stride=2, padding=1),
             nn.ReLU()
         )
@@ -70,7 +68,7 @@ class Vanilla_DQN_Pacman(nn.Module):
             action = random.randrange(self.num_actions)
         return action
 
-
+# Vanilla network for Snake with Dueling Architecture included
 class Vanilla_DQN_Snake(nn.Module):
     def __init__(self, input_shape, num_actions, dueling_DQN):
         super(Vanilla_DQN_Snake, self).__init__()
@@ -134,7 +132,7 @@ class Vanilla_DQN_Snake(nn.Module):
 
 
 
-
+# Extra network to check the Q-learning algorithms
 class DQN_Cartpole(torch.nn.Module):
     def __init__(self, num_inputs, num_actions):
         super(DQN_Cartpole, self).__init__()
