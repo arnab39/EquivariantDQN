@@ -1,6 +1,5 @@
 # EquivariantDQN
-![Snake Game](assets/snake.gif)
-![Pacman Game](assets/pacman.gif)
+<img src="/assets/snake.gif" width="250" height="250"/>
 <img src="/assets/pacman.gif" width="250" height="250"/>
 
 This is the official repository of our paper "Steerable CNNs for Deep Q-Learning in symmetric environments". Note that the entire code is written in python 3.7 to make it compatible with e2cnn library. We use the Snake environment throughout the project. 
