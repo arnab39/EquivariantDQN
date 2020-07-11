@@ -34,8 +34,10 @@ pip install .
 
 ## How to run
 Although you can select different arguments we would recommend to use the default setting which are found by manually tuning hyperparamters. Values those hyperparameter arguments which are different for Snake and Pacman:
--`replay_memory_size` (Snake: 100000| Pacman:300000)
--`frame_update_freq` (Snake: 1000| Pacman:10000)
+
+- `replay_memory_size` (Snake: 100000| Pacman:300000)
+- `frame_update_freq` (Snake: 1000| Pacman:10000)
+
 Other default arguments can be dound in the `main.py` file. As we kept all the setting same for Vanilla and Equivariant network, using other hyperparameters will give similar improvements. Also user should note that in our implementation we decay `epsilon` to 0.01 from 1 and the decay rate can be controlled by hyperparameter `epsilon_decay` which we typically keep to 40,000. Increasing decay this will lead to more exploration at the beginning and possibly better results for both the models. 
  
 ## Reproducing the results in the paper
